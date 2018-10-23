@@ -32,7 +32,13 @@ namespace ROSMessages {
 
 			PointCloud2() {
 				_MessageType = "sensor_msgs/PointCloud2";
+                data_ptr = nullptr;
 			}
+
+            ~PointCloud2() {
+                if (data_ptr != nullptr)
+                    delete[] data_ptr;
+            }
 
 			ROSMessages::std_msgs::Header header;
 
@@ -47,7 +53,8 @@ namespace ROSMessages {
 
             // To avoid copy operations of the point data, hand over a pointer to the data. 
 			// Please note, that the memory this pointer points to must be valid until this message has been published.
-            const uint8* data_ptr;
+            // const uint8* data_ptr;
+            uint8* data_ptr; // HACK
 
             bool is_dense;
 		};
