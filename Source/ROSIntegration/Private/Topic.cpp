@@ -98,7 +98,7 @@ public:
 	bool Publish(TSharedPtr<FROSBaseMsg> msg)
 	{
 		bson_t *bson_message = nullptr;
-
+		UE_LOG(LogROS, Error, TEXT("Here"));
 		if (ConvertMessage(msg, &bson_message)) {
 			return _ROSTopic->Publish(bson_message);
 			//bson_destroy(bson_message); // Not necessary, since bson memory will be freed in the rosbridge core code
@@ -163,7 +163,9 @@ UTopic::UTopic(const FObjectInitializer& ObjectInitializer)
 , _SelfPtr(this)
 , _Implementation(new UTopic::Impl())
 {
-	_State.Connected = true;
+	UE_LOG(LogROS, Error, TEXT("UTopic Constructor"));
+	//_State.Connected = true;
+	_State.Connected = false;
 	_State.Advertised = false;
 	_State.Subscribed = false;
 	_State.Blueprint = false;
@@ -191,6 +193,7 @@ void UTopic::BeginDestroy() {
 	}
 	_State.Connected = false;
 
+	UE_LOG(LogROS, Error, TEXT("Deleting Implementation"));
 	delete _Implementation;
     _Implementation = nullptr;
 
@@ -224,7 +227,14 @@ bool UTopic::Unadvertise()
 
 bool UTopic::Publish(TSharedPtr<FROSBaseMsg> msg)
 {
-	return _State.Connected && _Implementation->Publish(msg);
+	/*
+	if (_State.Connected) {
+		UE_LOG(LogROS, Error, TEXT("Connected"));
+	} else {
+		UE_LOG(LogROS, Error, TEXT("Not Connected"));
+	}*/
+
+	return _State.Connected && _Implementation != nullptr && _Implementation->Publish(msg);
 }
 
 void UTopic::Init(UROSIntegrationCore *Ric, FString Topic, FString MessageType, int32 QueueSize)
@@ -240,6 +250,7 @@ void UTopic::MarkAsDisconnected()
 
 bool UTopic::Reconnect(UROSIntegrationCore* ROSIntegrationCore)
 {
+	UE_LOG(LogROS, Error, TEXT("Reconnecting"));
 	bool success = true;
     _ROSIntegrationCore = ROSIntegrationCore;
 
@@ -247,7 +258,8 @@ bool UTopic::Reconnect(UROSIntegrationCore* ROSIntegrationCore)
 	_Implementation = new UTopic::Impl();
     _Implementation->Init(ROSIntegrationCore, oldImplementation->_Topic, oldImplementation->_MessageType, oldImplementation->_QueueSize);
 
-	_State.Connected = true;
+	 _State.Connected = false;  // da true a false per fixare il bug
+	//_State.Connected = true;
 	if (_State.Subscribed)
     {
         success = Subscribe(oldImplementation->_Callback);
